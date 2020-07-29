@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        body{
+            font-family: Microsoft JhengHei ;
+            text-align: center;
+            font-weight: 600;
+        }
+        h1{
+            margin: auto;
+            /* border-right: #C09379 4px solid; */
+            display: inline-block;
+            padding: 0 10px;
+            /* border-left: #C09379 4px solid; */
+            border: #C09379 4px solid;
+            margin-top: 10px;
+        }
+
+        
+
+        p>span{
+            font-size: 1.5rem;
+            margin: 0 10px;
+        }
+        button{
+            font-family: Microsoft JhengHei ;
+            border: none;
+            background-color:rosybrown;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            color:white;
+            margin-left: 10px;
+            outline: none;
+    
+        }
+        button:hover{
+            background-color: wheat;
+            color: black;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>奶茶の波霸逆襲</h1>
+    <p>躲開波霸球球，搶吃粉紅磚塊得高分</p>
+    <p>SCORE<span id="myScore">0</span>分<button id="gameAgain">重新開始</button></p>
+    <canvas id="surface"></canvas>
+    <div id="timer"></div>
+    <script>
+    var score = 0;
+    var ball = {
+           x:0,
+           y:0,
+           vx:2,
+           vy:3,
+           r:10
+       }
+    var enemy = {
+            x:Math.floor(Math.random()*surface.width),
+            y:Math.floor(Math.random()*surface.height),
+            vx:2,
+            vy:3,
+            r:10
+        }
+    var enemys=[];
+    enemys.push(enemy);
+
+    var gift = {
+           x:Math.floor(Math.random()*surface.width),
+           y:Math.floor(Math.random()*surface.height),
+           width:20,
+           height:20
+        }
+    
+    // 每3秒出現一個波霸
+    setInterval(function(){
+        enemy = {
+            x:Math.floor(Math.random()*surface.width),
+            y:Math.floor(Math.random()*surface.height),
+            vx:2,
+            vy:3,
+            r:10
+        }
+        enemys.push(enemy);
+        // console.log(enemys);
+    },3000)
+      
+    var ctx = surface.getContext('2d');
+    surface.width = 800;
+    surface.height = 500;
+
+    var keyFlag = "none";  //user操作動作
+
+    function BubbleBall(){
+
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+
+        enemys.forEach(function(item,index,array){
+            
+            item.x += item.vx;
+            item.y += item.vy;
+
+        // 波霸球球
+        if(item.y + item.r >=  surface.height ){  //hit bottom
+            item.vy = -1*Math.abs(item.vy);
+        }
+        if(item.y - item.r <= 0 ){               //hit top
+            item.vy = Math.abs(item.vy);
+        }
+        if(item.x + item.r >= surface.width ){  //hit right
+            item.vx = -1*Math.abs(item.vx);
+        }
+        if(item.x - item.r <= 0 ){              //hit left
+            item.vx = Math.abs(item.vx);
+        }
+
+        if(Math.sqrt(Math.pow(ball.x - item.x, 2) + 
+            Math.pow(ball.y - item.y, 2)) < ball.r + item.r){
+                alert("撞到了");
+                clearInterval(canvasInterval);
+                // canvasInterval = null;
+
+            }
+
+        })
+        // console.log( gift.x,gift.y);
+
+
+        if(!(ball.y + ball.r < gift.y ||
+            ball.x - ball.r > gift.x + gift.width ||
+            ball.y - ball.r > gift.y + gift.height ||
+            ball.x + ball.r < gift.x)){
+            console.log("eat!!!!!!!!");
+
+            score ++ ;
+            document.getElementById("myScore").innerText = score ;
+            gift.x = Math.floor(Math.random()*surface.width);
+            gift.y = Math.floor(Math.random()*surface.height);
+            
+        }
+
+
+        if(keyFlag == "top" || ball.y + ball.r >=  surface.height ){  //hit bottom
+            ball.vy = -1*Math.abs(ball.vy);
+        }
+        if(keyFlag == "bottom" || ball.y - ball.r <= 0 ){               //hit top
+            ball.vy = Math.abs(ball.vy);
+        }
+        if(keyFlag == "left" || ball.x + ball.r >= surface.width ){  //hit right
+            ball.vx = -1*Math.abs(ball.vx);
+        }
+        if(keyFlag == "right" || ball.x - ball.r <= 0 ){              //hit left
+            ball.vx = Math.abs(ball.vx);
+        }
+
+        keyFlag = "none";
+
+        ctx.fillStyle = "#C09379";
+        ctx.fillRect(0,0,surface.width,surface.height);
+
+        ctx.beginPath(); //clear 繪圖memery
+        ctx.fillStyle = "white";
+        ctx.arc(ball.x,ball.y,ball.r,0,2*Math.PI);
+        ctx.fill();
+
+        //波霸球球繪圖 
+        enemys.forEach(function(item,index,array){
+            ctx.beginPath(); //clear 繪圖memery
+            ctx.arc(item.x,item.y,item.r,0,2*Math.PI);
+            ctx.fillStyle = "black";
+            ctx.fill()
+
+        })
+
+        // gift 繪圖
+        ctx.fillStyle = "#E54860";
+        ctx.fillRect(gift.x,gift.y,gift.width,gift.height);
+
+
+}
+ 
+    var canvasInterval = setInterval(BubbleBall,1000/60);
+
+    document.getElementById("gameAgain").onclick = function(){
+         score = 0;
+         ball = {
+           x:0,
+           y:0,
+           vx:2,
+           vy:3,
+           r:10
+        }
+        enemy = {
+            x:Math.floor(Math.random()*surface.width),
+            y:Math.floor(Math.random()*surface.height),
+            vx:2,
+            vy:3,
+            r:10
+        }
+        enemys=[];
+        enemys.push(enemy);
+
+        gift = {
+           x:Math.floor(Math.random()*surface.width),
+           y:Math.floor(Math.random()*surface.height),
+           width:20,
+           height:20
+        }
+        document.getElementById("myScore").innerText = score ;
+        clearInterval(canvasInterval);
+        canvasInterval = null;
+        canvasInterval = setInterval(BubbleBall,1000/60);        
+    };
+
+    document.onkeydown = function(){
+
+        switch(event.keyCode){
+            case 37:
+                keyFlag = "left";
+                break;
+            case 39:
+                keyFlag = "right";
+                break;
+            case 40:
+                keyFlag = "bottom";  
+                break;
+            case 38:
+                keyFlag = "top";
+                break;
+        }
+
+    }
+    
+
+    </script>
+</body>
+</html>

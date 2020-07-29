@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://unpkg.com/http-vue-loader"></script>
+    <title>Document</title>
+    <style>
+        body{
+            padding: 10%;
+            font-family: Microsoft JhengHei;
+        }
+        canvas{
+            border:slategrey 1px solid;
+            margin-left: 10px;
+            background-color:lightgrey;
+        }
+        .keyform{
+            width: 400px;
+            float: left;
+        }
+        .downBox{
+            text-align: right;
+        }
+        span,a{
+            display: inline-block;
+            margin-bottom: 10px;
+            margin-right: 10px;
+        }
+        img{
+            width: 60px;
+            height: 40px;
+            object-fit: cover;
+            margin: 10px;
+            cursor: pointer;
+        }
+        img:hover{
+            border: cornflowerblue 2px solid;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="keyform">
+            <h1>長輩圖產生器</h1>
+            <hr>
+            <div>
+                <img :src="item" :key=key v-for="(item,key) in imgList" @click="addImgFromlist">
+            </div>
+            <div><span>加入圖片:</span><input type="file" @change="addImg"></div>
+            <div><span>輸入文字:</span><input v-model="mytext.content" @input="addText"></div>
+            <div><span>文字顏色:</span><input type="color" v-model="mytext.color" @change="changeColor"></div>
+            <div><span>文字大小:</span><input type="range" min="10" max="200" v-model="mytext.size"  @change="addText">{{mytext.size}}px</div>        
+            <div>
+                <span>文字位置</span><br>
+                <div><span>水平位置:</span>左<input type="range" v-model="mytext.x" min="0" max="600" @change="addText">右</div>
+                <div><span>垂直位置:</span>上<input type="range" v-model="mytext.y" min="0" max="400" @change="addText">下</div>
+            </div>
+            <div class="downBox">
+                <i class="fa fa-cloud-download"></i><a id="aDownload" href="" download="" @click="downloadImg">下載圖片</a>
+            </div>
+        </div>
+        <canvas id="mycanvas"></canvas>
+    </div>
+<script>
+var app = new Vue({
+        el:"#app",
+        data:{
+            imgList:["./img/1.png","./img/2.png","./img/3.png","./img/4.png"],
+            currentImg:"", 
+            myimg:{
+                src:""
+            },
+            mytext:{
+                content:"",
+                color:"#D74343",
+                size:40,
+                x:300,
+                y:200
+            },
+            c:{
+                width:600,
+                height:400
+            },
+            ctx:{},
+
+        },
+        methods: {
+            // 建立canvas畫布
+            addCanvas:function(){
+                var c = document.getElementById("mycanvas");
+                var ctx = c.getContext('2d');
+                c.width = 600;
+                c.height = 400;
+                // ctx.strokeStyle = "#0000FF"; //設定線段顏色
+                this.c = c ;
+                this.ctx = ctx;
+            },
+            drawToCanvas:function(src,x=0,y=0){
+                var vm = this;
+                let img = new Image();
+                img.src = src;
+                vm.myimg.src = src;
+                img.onload = ()=>{
+                    if(vm.mytext.content){
+                        vm.addText();
+                    }
+                    vm.ctx.drawImage(img, x, y,600,400);
+                }              
+            },
+            addImgFromlist:function(e){
+                var vm = this;
+                imgSrc = e.target.src;
+                let img = new Image();
+                img.src = imgSrc;
+                vm.ctx.clearRect(0,0,vm.c.width,vm.c.height);
+                vm.ctx.drawImage(img,0, 0,600,400);
+                var base64 = vm.c.toDataURL("image/png");
+                vm.myimg.src = base64;
+
+            },
+            addImg:function(e){
+                var vm = this;
+                var img = e.target.files[0];
+                console.log(img);
+                if (!img) return;
+                vm.ctx.clearRect(0,0,vm.c.width,vm.c.height);
+                const reader = new FileReader();
+                reader.readAsDataURL(img);
+                reader.onload = () => {
+                    if(vm.mytext.content){
+                        vm.addText();
+                    }
+                    vm.drawToCanvas(reader.result);
+                };
+            },
+            addText:function(){
+                var vm = this;
+                var text = vm.mytext.content;
+                vm.ctx.globalCompositeOperation = "copy";
+                vm.ctx.font =`${vm.mytext.size}px 標楷體`;
+                vm.ctx.textBaseline ="middle";  //top,middle,bottom   文字垂直對齊位置
+                vm.ctx.textAlign ="center";     //center,left,right    文字水平對齊位置
+                vm.ctx.fillText(text,vm.mytext.x,vm.mytext.y);
+                if(vm.myimg.src){
+                    vm.ctx.globalCompositeOperation = "destination-over";
+                    vm.drawToCanvas(vm.myimg.src);
+                }
+            },
+            changeColor:function(){
+                var vm = this;
+                vm.ctx.fillStyle = vm.mytext.color;
+                vm.addText();
+            },
+            downloadImg:function(){
+                var vm = this;
+                aDownload.href = vm.c.toDataURL("image/png");
+            }
+        },
+        mounted() {
+            this.addCanvas();
+            this.changeColor();
+        },
+
+})
+
+</script>
+</body>
+</html>
